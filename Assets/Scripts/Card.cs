@@ -1,4 +1,6 @@
 using DG.Tweening;
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,9 +10,24 @@ public class Card : MonoBehaviour
     public Vector3 homePosition;
     public bool selected = false;
     public string description = "";
+    public string type = "";
+    public string suite = "";
+    public Color defaultColor = Color.white;
+    public List<int> requirment = new List<int>();
+    public GameObject player;
 
     private float time = 0;
     private bool kill;
+    private bool shake = false;
+
+    private void Awake()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            requirment.Add(0);
+        }
+        player = GameObject.Find("Player");
+    }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -20,6 +37,24 @@ public class Card : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (type == "SIN" && selected == true)
+        {
+            if (checkRequirments())
+            {
+                if (!DOTween.IsTweening(GetInstanceID(), true))
+                {
+                    transform.position = new Vector3(homePosition.x, homePosition.y+1);
+                }
+                shake = false;
+            } else
+            {
+                shake = true;
+            }
+        }
+        if (shake == true && !DOTween.IsTweening(GetInstanceID(), true) && selected == true) 
+        {
+            transform.position = new Vector3(homePosition.x, homePosition.y + 1 + Random.Range(0f, 0.1f));
+        }
         if (kill)
         {
             time += Time.deltaTime;
@@ -45,5 +80,56 @@ public class Card : MonoBehaviour
     {
         GetComponent<SpriteRenderer>().DOFade(0, 1);
         kill = true;
+    }
+
+    public void DetermineType()
+    {
+        int chance = Random.Range(0,10);
+        if (chance >= 3 && chance <= 10)
+        {
+            type = "VIRTUE";
+            chance = Random.Range(0,3);
+            defaultColor = Color.white;
+            switch (chance)
+            {
+                case 0:
+                    suite = "CHARITY";
+                    defaultColor = Color.pink;
+                    description = suite;
+                    break;
+                case 1:
+                    suite = "HUMANLITY";
+                    defaultColor = Color.darkMagenta;
+                    description = suite;
+                    break;
+                case 2:
+                    suite = "FAITH";
+                    defaultColor = Color.ghostWhite;
+                    description = suite;
+                    break;
+                case 3:
+                    suite = "JUSTICE";
+                    defaultColor = Color.blue;
+                    description = suite;
+                    break;
+            }
+        } else
+        {
+            type = "SIN";
+            defaultColor = Color.red;
+            description = "SIN";
+            requirment[0] = 1;
+        }
+        GetComponent<SpriteRenderer>().color = defaultColor;
+    }
+
+    public bool checkRequirments()
+    {
+        Player playerScript = player.GetComponent<Player>();
+        if (playerScript.selectedCards[0] >= requirment[0] && playerScript.selectedCards[1] >= requirment[1] && playerScript.selectedCards[2] >= requirment[2] && playerScript.selectedCards[3] >= requirment[3])
+        {
+            return true;
+        }
+        return false;
     }
 }

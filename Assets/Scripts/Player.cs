@@ -18,6 +18,8 @@ public class Player : MonoBehaviour
     public GameObject play;
     public GameObject Judge;
 
+    public List<int> selectedCards = new List<int> { 0, 0, 0, 0 };
+
     public Transform currentCard, previousCard;
 
     public string state = "HAND";
@@ -28,17 +30,22 @@ public class Player : MonoBehaviour
     RaycastHit2D hit;
 
     Vector3 mousePosition;
-        
+
     void Start()
     {
+        for (int i = 0; i < 4; i++)
+        {
+            selectedCards.Add(0);
+        }
+        //Draw First Cards
         for (int i = 0; i < 7; i++)
         {
             hand.Add(Instantiate(card));
-            hand[i].transform.position = new Vector3(10,-10);
+            hand[i].transform.position = new Vector3(10, -10);
             hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), 1);
             hand[i].GetComponent<Card>().homePosition = new Vector3((7f) - (i * (2.33f)), 0, 0);
+            hand[i].GetComponent<Card>().DetermineType();
             hand[i].name = "Card " + i;
-            hand[i].GetComponent<Card>().description = hand[i].name;
         }
     }
 
@@ -64,15 +71,33 @@ public class Player : MonoBehaviour
                 {
                     if (!currentCard.GetComponent<Card>().selected)
                     {
+                        //Select the card
                         currentCard.GetComponent<SpriteRenderer>().color = Color.green;
+                        if (currentCard.GetComponent<Card>().type == "SIN")
+                        {
+                            for (int i = 0; i < hand.Count(); i++)
+                            {
+                                if (hand[i].GetComponent<Card>().type == "SIN" && hand[i].GetComponent<Card>().selected == true)
+                                {
+                                    hand[i].GetComponent<SpriteRenderer>().color = currentCard.GetComponent<Card>().defaultColor;
+                                    hand[i].GetComponent<Card>().selected = false;
+                                    manageCardSelect(hand[i].GetComponent<Card>().suite, "SUBTRACT");
+                                    hand[i].transform.DOKill();
+                                    hand[i].transform.DOMove(new Vector3(hand[i].GetComponent<Card>().homePosition.x, hand[i].GetComponent<Card>().homePosition.y), 0.5f);
+                                }
+                            }
+                        }
                         currentCard.GetComponent<Card>().selected = true;
+                        manageCardSelect(currentCard.GetComponent<Card>().suite, "ADD");
                         currentCard.DOKill();
                         currentCard.DOMove(new Vector3(currentPostion.x, currentPostion.y + 1f), 0.5f);
                     }
                     else
                     {
-                        currentCard.GetComponent<SpriteRenderer>().color = Color.white;
+                        //Deselect the card
+                        currentCard.GetComponent<SpriteRenderer>().color = currentCard.GetComponent<Card>().defaultColor;
                         currentCard.GetComponent<Card>().selected = false;
+                        manageCardSelect(currentCard.GetComponent<Card>().suite, "SUBTRACT");
                         currentCard.DOKill();
                         currentCard.DOMove(new Vector3(currentPostion.x, currentPostion.y), 0.5f);
                     }
@@ -107,7 +132,7 @@ public class Player : MonoBehaviour
                 bool selected = previousCard.GetComponent<Card>().selected;
                 if (selected != true)
                 {
-                    previousCard.GetComponent<SpriteRenderer>().color = Color.white;
+                    previousCard.GetComponent<SpriteRenderer>().color = previousCard.GetComponent<Card>().defaultColor;
                     Vector3 previousPostion = previousCard.GetComponent<Card>().homePosition;
                     previousCard.DOMove(new Vector3(previousPostion.x, previousPostion.y), 0.5f);
                     //Debug.Log(previousCard);
@@ -118,17 +143,22 @@ public class Player : MonoBehaviour
                 currentCard.GetComponent<SpriteRenderer>().color = Color.grey;
                 if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        selectedCards[i] = 0;
+                    }
                     currentCard.GetComponent<SpriteRenderer>().color = Color.white;
                     currentCard.transform.DOKill();
                     currentCard.transform.DOMove(new Vector3(0, -10), 1);
                     for (int i = 0; i < hand.Count; i++)
                     {
                         Vector3 currentPostion = hand[i].GetComponent<Card>().homePosition;
-                        hand[i].GetComponent<SpriteRenderer>().color = Color.white;
+                        hand[i].GetComponent<SpriteRenderer>().color = hand[i].GetComponent<Card>().defaultColor;
                         hand[i].GetComponent<Card>().HideText();
                         if (hand[i].GetComponent<Card>().selected)
                         {
                             //print("Select" + hand[i].name);
+                            hand[i].GetComponent<Card>().selected = false;
                             hand[i].transform.DOKill();
                             inPlay.Add(hand[i]);
                             hand.RemoveAt(i);
@@ -170,11 +200,12 @@ public class Player : MonoBehaviour
                     hand[i].transform.DOKill();
                     hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), Random.Range(0.8f, 1.5f));
                     hand[i].GetComponent<Card>().homePosition = new Vector3((7f) - (i * (2.33f)), 0);
-                    
+
                 }
                 int currentCount = hand.Count;
                 if (hand.Count < 7)
                 {
+                    // Draw cards again after play
                     while (hand.Count != 7)
                     {
                         hand.Add(Instantiate(card));
@@ -182,10 +213,10 @@ public class Player : MonoBehaviour
                     for (int i = currentCount; i < hand.Count; i++)
                     {
                         hand[i].transform.position = new Vector3(10, -10);
-                        hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), Random.Range(1f,2f));
+                        hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), Random.Range(1f, 2f));
                         hand[i].GetComponent<Card>().homePosition = new Vector3((7f) - (i * (2.33f)), 0);
                         hand[i].name = "Card " + i;
-                        hand[i].GetComponent<Card>().description = hand[i].name;
+                        hand[i].GetComponent<Card>().DetermineType();
                     }
                 }
                 Judge.GetComponent<Judge>().DestroyCard();
@@ -194,13 +225,37 @@ public class Player : MonoBehaviour
                 state = "TRANSITION TO HAND";
                 time = 0;
             }
-        } else if (state == "TRANSITION TO HAND")
+        }
+        else if (state == "TRANSITION TO HAND")
         {
             time += Time.deltaTime;
             if (time >= 1.5f)
             {
                 state = "HAND";
             }
+        }
+    }
+    public void manageCardSelect(string type, string action)
+    {
+        switch (type) {
+            case "CHARITY":
+                if (action == "ADD") { selectedCards[0]++;}
+                else if (action == "SUBTRACT") { selectedCards[0]--;}
+                break;
+            case "HUMANLITY":
+                if (action == "ADD") { selectedCards[1]++; }
+                else if (action == "SUBTRACT") { selectedCards[1]--;}
+                break;
+            case "FAITH":
+                if (action == "ADD") { selectedCards[2]++; }
+                else if (action == "SUBTRACT") { selectedCards[2]--;}
+                break;
+            case "JUSTICE":
+                if (action == "ADD") { selectedCards[3]++; }
+                else if (action == "SUBTRACT") { selectedCards[3]--;}
+                break;
+            default:
+                break;
         }
     }
 }
