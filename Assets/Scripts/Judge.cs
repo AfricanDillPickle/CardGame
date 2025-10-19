@@ -3,6 +3,7 @@ using UnityEngine.XR;
 using DG.Tweening;
 public class Judge : MonoBehaviour
 {
+
     public GameObject card;
     public GameObject currentCard;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
