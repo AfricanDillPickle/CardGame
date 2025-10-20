@@ -8,6 +8,7 @@ using DG.Tweening;
 using UnityEngine.Lumin;
 using UnityEngine.XR;
 using System.Linq;
+using TMPro;
 
 public class Player : MonoBehaviour
 {
@@ -17,14 +18,19 @@ public class Player : MonoBehaviour
     public GameObject mainCamera;
     public GameObject play;
     public GameObject Judge;
+    public GameObject handCountText;
 
-    public List<int> selectedCards = new List<int> { 0, 0, 0, 0 };
+    public int handCount = 1;
+
+    public List<int> selectedCards = new List<int>();
 
     public Transform currentCard, previousCard;
 
     public string state = "HAND";
 
     private float time = 0;
+    private bool infected = false;
+    private bool judged = false;
 
     Ray ray;
     RaycastHit2D hit;
@@ -33,6 +39,7 @@ public class Player : MonoBehaviour
 
     void Start()
     {
+        handCountText.GetComponent<TextMeshPro>().text = "Hand: " + handCount;
         for (int i = 0; i < 4; i++)
         {
             selectedCards.Add(0);
@@ -49,7 +56,6 @@ public class Player : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         mousePosition = Mouse.current.position.ReadValue();
@@ -62,13 +68,19 @@ public class Player : MonoBehaviour
         //hit.transform.position = new Vector3(0f, 0f);
         if (state == "HAND")
         {
+            //When the player is looking at their hand
             if (currentCard && currentCard.GetComponent<Card>())
             {
+                if (currentCard != previousCard)
+                {
+                    GetComponent<AudioManager>().Play("CLICK", 2);
+                }
                 bool selected = currentCard.GetComponent<Card>().selected;
                 Vector3 currentPostion = currentCard.GetComponent<Card>().homePosition;
                 currentCard.GetComponent<Card>().ShowText();
                 if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
+                    GetComponent<AudioManager>().Play("CLICK", 1);
                     if (!currentCard.GetComponent<Card>().selected)
                     {
                         //Select the card
@@ -143,10 +155,6 @@ public class Player : MonoBehaviour
                 currentCard.GetComponent<SpriteRenderer>().color = Color.grey;
                 if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        selectedCards[i] = 0;
-                    }
                     currentCard.GetComponent<SpriteRenderer>().color = Color.white;
                     currentCard.transform.DOKill();
                     currentCard.transform.DOMove(new Vector3(0, -10), 1);
@@ -168,6 +176,7 @@ public class Player : MonoBehaviour
                         {
                             //print("Not" + hand[i].name);
                             hand[i].transform.DOKill();
+                            //Debug.Log("Move Cards");
                             hand[i].transform.DOMove(new Vector3(currentPostion.x, currentPostion.y - 10f), 1f);
                         }
                     }
@@ -175,7 +184,9 @@ public class Player : MonoBehaviour
                     {
                         inPlay[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), -2), Random.Range(0.6f, 1f));
                     }
+                    Judge.GetComponent<Judge>().HideIndicators(0.5f);
                     state = "PLAY";
+                    time = 0;
                     Judge.GetComponent<Judge>().PlayCard();
                 }
             }
@@ -187,42 +198,52 @@ public class Player : MonoBehaviour
         else if (state == "PLAY")
         {
             time += Time.deltaTime;
-            if (time >= 3)
+            if(time >= 2)
             {
+                for (int i = 0; i < Judge.GetComponent<Judge>().requirment.Count; i++)
+                {
+                    if (Judge.GetComponent<Judge>().requirment[i] > selectedCards[i])
+                    {
+                        Judge.GetComponent<Judge>().ApplyEffects();
+                    }
+                }
+                judged = true;
+            }
+            if (time >= 4)
+            {
+                Judge.GetComponent<Judge>().DestroyCard();
+                GetComponent<JuryManager>().inPlay.Clear();
                 for (int i = 0; i < inPlay.Count; i++)
                 {
+                    if (inPlay[i].GetComponent<Card>().type == "SIN")
+                    {
+                        if (!inPlay[i].GetComponent<Card>().checkRequirments())
+                        {
+                            Time.timeScale = 0;
+                        }
+                    }
+                    GetComponent<JuryManager>().inPlay.Add(inPlay[i]);
+
                     inPlay[i].GetComponent<Card>().DestroyCard();
                     inPlay.RemoveAt(i);
                     i--;
                 }
-                for (int i = 0; i < hand.Count; i++)
+                GetComponent<JuryManager>().applyEffect();
+                if (handCount <= 2)
                 {
-                    hand[i].transform.DOKill();
-                    hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), Random.Range(0.8f, 1.5f));
-                    hand[i].GetComponent<Card>().homePosition = new Vector3((7f) - (i * (2.33f)), 0);
-
+                    resetCards();
+                    handCount++;
+                    handCountText.GetComponent<TextMeshPro>().text = "Hand: " + handCount;
                 }
-                int currentCount = hand.Count;
-                if (hand.Count < 7)
+                else
                 {
-                    // Draw cards again after play
-                    while (hand.Count != 7)
-                    {
-                        hand.Add(Instantiate(card));
-                    }
-                    for (int i = currentCount; i < hand.Count; i++)
-                    {
-                        hand[i].transform.position = new Vector3(10, -10);
-                        hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), Random.Range(1f, 2f));
-                        hand[i].GetComponent<Card>().homePosition = new Vector3((7f) - (i * (2.33f)), 0);
-                        hand[i].name = "Card " + i;
-                        hand[i].GetComponent<Card>().DetermineType();
-                    }
+                    mainCamera.transform.DOMove(new Vector3(-18, 0, -10), 2);
+                    handCount = 1;
+                    handCountText.GetComponent<TextMeshPro>().text = "Hand: " + handCount;
+                    GetComponent<JuryManager>().check = true;
+                    state = "JUDGE";
                 }
-                Judge.GetComponent<Judge>().DestroyCard();
-                play.transform.DOKill();
-                play.transform.DOMove(new Vector3(0, -3.85f), 1);
-                state = "TRANSITION TO HAND";
+                judged = false;
                 time = 0;
             }
         }
@@ -231,6 +252,32 @@ public class Player : MonoBehaviour
             time += Time.deltaTime;
             if (time >= 1.5f)
             {
+                Judge.GetComponent<Judge>().ShowIndicators(1f);
+                state = "HAND";
+
+            }
+        }
+        else if (state == "INFECT")
+        {
+            
+            time += Time.deltaTime;
+            if (time >= 2f && infected == false)
+            {
+                for (int i = 0; i < hand.Count; i++)
+                {
+                    if (hand[i].GetComponent<Card>().type == "VIRTUE")
+                    {
+                        hand[i].GetComponent<Card>().infect();
+                        infected = true;
+                        i = hand.Count;
+                        break;
+                    }
+                }
+                infected = true;
+            }
+            if (time >= 3f)
+            {
+                Judge.GetComponent<Judge>().ShowIndicators(1f);
                 state = "HAND";
             }
         }
@@ -242,7 +289,7 @@ public class Player : MonoBehaviour
                 if (action == "ADD") { selectedCards[0]++;}
                 else if (action == "SUBTRACT") { selectedCards[0]--;}
                 break;
-            case "HUMANLITY":
+            case "HUMILITY":
                 if (action == "ADD") { selectedCards[1]++; }
                 else if (action == "SUBTRACT") { selectedCards[1]--;}
                 break;
@@ -257,5 +304,49 @@ public class Player : MonoBehaviour
             default:
                 break;
         }
+    }
+
+    public void resetCards(string newState = "NONE")
+    {
+        time = 0;
+        if (mainCamera.transform.position != new Vector3(0, 0, -10))
+        {
+            mainCamera.transform.DOMove(new Vector3(0, 0, -10), 2);
+        }
+        for (int i = 0; i < hand.Count; i++)
+        {
+            hand[i].transform.DOKill();
+            hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), Random.Range(0.8f, 1.5f));
+            hand[i].GetComponent<Card>().homePosition = new Vector3((7f) - (i * (2.33f)), 0);
+            hand[i].GetComponent<Card>().selected = false;
+
+        }
+        int currentCount = hand.Count;
+        if (hand.Count < 7)
+        {
+            // Draw cards again after play
+            while (hand.Count != 7)
+            {
+                hand.Add(Instantiate(card));
+            }
+            for (int i = currentCount; i < hand.Count; i++)
+            {
+                hand[i].transform.position = new Vector3(10, -10);
+                hand[i].transform.DOMove(new Vector3((7f) - (i * (2.33f)), 0), Random.Range(1f, 2f));
+                hand[i].GetComponent<Card>().homePosition = new Vector3((7f) - (i * (2.33f)), 0);
+                hand[i].name = "Card " + i;
+                hand[i].GetComponent<Card>().DetermineType();
+                hand[i].GetComponent<Card>().selected = false;
+            }
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            selectedCards[i] = 0;
+        }
+        play.transform.DOKill();
+        play.transform.DOMove(new Vector3(0, -3.85f), 1);
+        if (newState == "LOSE") {
+            state = "INFECT";
+        } else { state = "TRANSITION TO HAND"; }
     }
 }

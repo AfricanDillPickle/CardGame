@@ -46,10 +46,21 @@ public class Card : MonoBehaviour
                     transform.position = new Vector3(homePosition.x, homePosition.y+1);
                 }
                 shake = false;
+                player.GetComponent<AudioManager>().StopPlaying("SIN");
             } else
             {
+                if (shake == false)
+                {
+                    player.GetComponent<AudioManager>().Play("SIN",2);
+                    Debug.Log("Play");
+                }
                 shake = true;
             }
+        }
+        if (shake == true && selected == false)
+        {
+            player.GetComponent<AudioManager>().StopPlaying("SIN");
+            shake = false;
         }
         if (shake == true && !DOTween.IsTweening(GetInstanceID(), true) && selected == true) 
         {
@@ -78,6 +89,7 @@ public class Card : MonoBehaviour
 
     public void DestroyCard()
     {
+        HideText();
         GetComponent<SpriteRenderer>().DOFade(0, 1);
         kill = true;
     }
@@ -88,37 +100,61 @@ public class Card : MonoBehaviour
         if (chance >= 3 && chance <= 10)
         {
             type = "VIRTUE";
-            chance = Random.Range(0,3);
+            chance = Random.Range(0,4);
             defaultColor = Color.white;
             switch (chance)
             {
                 case 0:
                     suite = "CHARITY";
-                    defaultColor = Color.pink;
                     description = suite;
+                    GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(suite);
                     break;
                 case 1:
-                    suite = "HUMANLITY";
-                    defaultColor = Color.darkMagenta;
+                    suite = "HUMILITY";
                     description = suite;
+                    GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(suite);
                     break;
                 case 2:
                     suite = "FAITH";
-                    defaultColor = Color.ghostWhite;
                     description = suite;
+                    GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(suite);
                     break;
                 case 3:
                     suite = "JUSTICE";
-                    defaultColor = Color.blue;
                     description = suite;
+                    GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(suite);
                     break;
             }
         } else
         {
             type = "SIN";
-            defaultColor = Color.red;
-            description = "SIN";
-            requirment[0] = 1;
+            //defaultColor = Color.red;
+            chance = Random.Range(0, 2);
+
+            switch (chance)
+            {
+                case 0:
+                    suite = "HARM";
+                    description = "HARM: 10% INCREASE ON ALL JURORS";
+                    requirment[3] = 1;
+                    break;
+                case 1:
+                    suite = "STEAL";
+                    description = "STEAL: SWAYS AN EXTRA RANDOM JUROR";
+                    requirment[0] = 1;
+                    break;
+                case 2:
+                    suite = "CUSS";
+                    break;
+                case 3:
+                    suite = "BLASPHEMY";
+                    break;
+                default:
+                    suite = "UNKNOWN";
+                    break;
+            }
+            GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(suite);
+
         }
         GetComponent<SpriteRenderer>().color = defaultColor;
     }
@@ -131,5 +167,49 @@ public class Card : MonoBehaviour
             return true;
         }
         return false;
+    }
+
+    public void infect()
+    {
+        type = "SIN";
+        defaultColor = Color.red;
+        GetComponent<SpriteRenderer>().color = defaultColor;
+        switch (suite)
+        {
+            case "CHARITY":
+                requirment[0] = 1;
+                description = "REQUIRES CHARITY";
+                break;
+            case "HUMILITY":
+                requirment[1] = 1;
+                description = "REQUIRES HUMILITY";
+                break;
+            case "FAITH":
+                requirment[2] = 1;
+                description = "REQUIRES FAITH";
+                break;
+            case "JUSTICE":
+                requirment[3] = 1;
+                description = "REQUIRES JUSTICE";
+                break;
+            default:
+                break;
+        }
+        suite = "EMPTY SIN";
+    }
+
+    public void Benevolance()
+    {
+        int chance = Random.Range(0, 1);
+        type = "BENEVOLANCE";
+        description = suite;
+        switch (chance)
+        {
+            case 0:
+                description = "UNSWAYS ONE JUROR";
+                suite = "HEAL";
+                GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(suite);
+                break;
+        }
     }
 }

@@ -3,34 +3,39 @@ using static UnityEngine.GraphicsBuffer;
 
 public class Juror : MonoBehaviour
 {
-    public Juror self;
     public float defaultProb = 0.2f;
-    private float currProb;
+    public float currProb;
 
     public bool swayed = false;
     public string suit;
 
 
     private GameObject targetChild;
-    public bool swayTest = false;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private void Awake()
+    {
+        targetChild = transform.Find("swayed").gameObject;
+        targetChild.SetActive(true);
+    }
     void Start()
     {
         JuryManager juryManager = FindFirstObjectByType<JuryManager>();
         juryManager.addJuror(this);
-        targetChild = transform.Find("swayed").gameObject;
         currProb = defaultProb;
-
-        if (swayTest) sway();
 
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (currProb >= 1f)
+        {
+            sway();
+            currProb = 0.99f;
+        }
+        targetChild.GetComponent<SpriteRenderer>().color = new Color(0f, 255f, 0f, currProb);
     }
 
     public void vote()
@@ -44,13 +49,10 @@ public class Juror : MonoBehaviour
         if (swayed != true)
         {
             swayed = true;
-            targetChild.SetActive(true);
-
-            swayTest = false;
+            
         }
         else Debug.Log("ERROR: already swayed");
 
-        swayTest = false;
 
     }
 }
