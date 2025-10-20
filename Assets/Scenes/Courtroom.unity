@@ -3847,6 +3847,12 @@ MonoBehaviour:
     pitch: 1
     loop: 0
     source: {fileID: 0}
+  - name: AMBIENCE
+    clip: {fileID: 8300000, guid: b077053af2ace3b45a417a681556a7f3, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
 --- !u!114 &1825726081
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4151,6 +4157,10 @@ PrefabInstance:
       propertyPath: swayTest
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5247460110887846752, guid: 544308715d4ce4840a46ae5042856a3e, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9a883a40057880d488ed3bef6031abed, type: 2}
     - target: {fileID: 8272166155540053957, guid: 544308715d4ce4840a46ae5042856a3e, type: 3}
       propertyPath: m_Name
       value: 3dJuror (1)

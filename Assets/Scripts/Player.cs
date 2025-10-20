@@ -42,6 +42,7 @@ public class Player : MonoBehaviour
 
     void Start()
     {
+        GetComponent<AudioManager>().Play("AMBIENCE", 0.8f);
         handCountText.GetComponent<TextMeshPro>().text = "Hand: " + handCount;
         for (int i = 0; i < 4; i++)
         {
@@ -191,6 +192,7 @@ public class Player : MonoBehaviour
                     }
                     Judge.GetComponent<Judge>().HideIndicators(0.5f);
                     state = "PLAY";
+                    GetComponent<AudioManager>().Play("CLICK", 0.5f);
                     time = 0;
                     Judge.GetComponent<Judge>().PlayCard();
                 }
