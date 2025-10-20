@@ -19,6 +19,9 @@ public class Player : MonoBehaviour
     public GameObject play;
     public GameObject Judge;
     public GameObject handCountText;
+    public GameObject UiJury;
+    public GameObject CameraManager;
+    public GameObject resultText;
 
     public int handCount = 1;
 
@@ -155,6 +158,8 @@ public class Player : MonoBehaviour
                 currentCard.GetComponent<SpriteRenderer>().color = Color.grey;
                 if (Mouse.current.leftButton.wasPressedThisFrame)
                 {
+                    CameraManager.GetComponent<cameraManager>().lookDown();
+                    UiJury.SetActive(false);
                     currentCard.GetComponent<SpriteRenderer>().color = Color.white;
                     currentCard.transform.DOKill();
                     currentCard.transform.DOMove(new Vector3(0, -10), 1);
@@ -237,6 +242,7 @@ public class Player : MonoBehaviour
                 }
                 else
                 {
+                    CameraManager.GetComponent<cameraManager>().lookJury();
                     mainCamera.transform.DOMove(new Vector3(-18, 0, -10), 2);
                     handCount = 1;
                     handCountText.GetComponent<TextMeshPro>().text = "Hand: " + handCount;
@@ -252,6 +258,7 @@ public class Player : MonoBehaviour
             time += Time.deltaTime;
             if (time >= 1.5f)
             {
+                UiJury.SetActive(true);
                 Judge.GetComponent<Judge>().ShowIndicators(1f);
                 state = "HAND";
 
@@ -261,6 +268,7 @@ public class Player : MonoBehaviour
         {
             
             time += Time.deltaTime;
+            resultText.GetComponent<TextMeshPro>().text = "INFECT";
             if (time >= 2f && infected == false)
             {
                 for (int i = 0; i < hand.Count; i++)
@@ -277,6 +285,8 @@ public class Player : MonoBehaviour
             }
             if (time >= 3f)
             {
+                resultText.GetComponent<TextMeshPro>().text = "";
+                UiJury.SetActive(true);
                 Judge.GetComponent<Judge>().ShowIndicators(1f);
                 state = "HAND";
             }
@@ -308,6 +318,7 @@ public class Player : MonoBehaviour
 
     public void resetCards(string newState = "NONE")
     {
+        CameraManager.GetComponent<cameraManager>().lookBack();
         time = 0;
         if (mainCamera.transform.position != new Vector3(0, 0, -10))
         {

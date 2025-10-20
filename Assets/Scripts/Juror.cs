@@ -35,7 +35,13 @@ public class Juror : MonoBehaviour
             sway();
             currProb = 0.99f;
         }
-        targetChild.GetComponent<SpriteRenderer>().color = new Color(0f, 255f, 0f, currProb);
+        if (currProb > 0.2f)
+        {
+            targetChild.GetComponent<Light>().intensity = currProb * 100;
+        } else
+        {
+            targetChild.GetComponent<Light>().intensity = 0;
+        }
     }
 
     public void vote()
@@ -49,6 +55,7 @@ public class Juror : MonoBehaviour
         if (swayed != true)
         {
             swayed = true;
+            currProb = 1f;
             
         }
         else Debug.Log("ERROR: already swayed");

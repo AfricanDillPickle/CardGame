@@ -14,7 +14,7 @@ TagManager:
   - 3DObjects
   - 3DOverlay
   - 2DObjects
-  - 
+  - text
   - 
   - 
   - 
@@ -41,7 +41,7 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: 
+  - name: text
     uniqueID: 2006888647
     locked: 0
   m_RenderingLayers:

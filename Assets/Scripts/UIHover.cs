@@ -27,18 +27,18 @@ public class UIHover : MonoBehaviour, IPointerEnterHandler
             case "Up": camManager.lookUp();
                 UIUp.SetActive(false);
                 UIJury.SetActive(true);
-                UIDown.SetActive(true);
+                //UIDown.SetActive(true);
                 break;
 
             case "Jury": camManager.lookJury();
                 UIJury.SetActive(false);
-                UIDown.SetActive(false);
+                //UIDown.SetActive(false);
                 UIBack.SetActive(true);
                 break;
 
             case "Back": camManager.lookBack();
                 UIJury.SetActive(true);
-                UIDown.SetActive(true);
+                //UIDown.SetActive(true);
                 UIBack.SetActive(false);
                 break;
         }
