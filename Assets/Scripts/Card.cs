@@ -129,7 +129,7 @@ public class Card : MonoBehaviour
         {
             type = "SIN";
             //defaultColor = Color.red;
-            chance = Random.Range(0, 2);
+            chance = Random.Range(0, 4);
 
             switch (chance)
             {
@@ -145,9 +145,13 @@ public class Card : MonoBehaviour
                     break;
                 case 2:
                     suite = "CUSS";
+                    description = "CUSS: 50% CHANCE TO SWAY TWO JURORS";
+                    requirment[1] = 1;
                     break;
                 case 3:
                     suite = "BLASPHEMY";
+                    description = "BLASPHEMY 50% INCREASE ON 3 RANDOM JURORS";
+                    requirment[2] = 1;
                     break;
                 default:
                     suite = "UNKNOWN";
@@ -200,7 +204,7 @@ public class Card : MonoBehaviour
 
     public void Benevolance()
     {
-        int chance = Random.Range(0, 1);
+        int chance = Random.Range(0, 4);
         type = "BENEVOLANCE";
         description = suite;
         switch (chance)
@@ -209,6 +213,21 @@ public class Card : MonoBehaviour
                 description = "UNSWAYS ONE JUROR";
                 suite = "HEAL";
                 GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(suite);
+                break;
+            case 1:
+                description = "REDUCES 3 JURORS BY 15%";
+                suite = "CHARITY";
+                GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("HEAL");
+                break;
+            case 2:
+                description = "50% TO REDUCE 2 JURORS BY 25%";
+                suite = "HUMILITY";
+                GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("HEAL");
+                break;
+            case 3:
+                description = "DECREASES 10 JURORS BY 5%";
+                suite = "JUSTICE";
+                GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>("HEAL");
                 break;
         }
     }

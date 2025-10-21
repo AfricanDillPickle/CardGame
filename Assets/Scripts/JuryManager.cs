@@ -107,6 +107,8 @@ public class JuryManager : MonoBehaviour
 
     public void applyEffect(bool benevolance = false)
     {
+ 
+
         if (!benevolance)
         {
             foreach (GameObject play in inPlay)
@@ -148,16 +150,75 @@ public class JuryManager : MonoBehaviour
                             }
                         }
                     }
+                    if (suite == "CUSS")
+                    {
+                        List<Juror> availableJurors = jurors.FindAll(j => !j.swayed);
+                        int swayedCount = 0;
+
+                        for (int i = 0; i < 2 && availableJurors.Count > 0; i++)
+                        {
+                            if (Random.value <= 0.5f)
+                            {
+                                Juror randomJuror = availableJurors[Random.Range(0, availableJurors.Count)];
+                                randomJuror.sway();
+                                availableJurors.Remove(randomJuror);
+                                swayedCount++;
+                            }
+                        }
+                    }
+                    if (suite == "BLASPHEMY")
+                    {
+                        List<Juror> availableJurors = new List<Juror>(jurors); // all jurors
+                        for (int i = 0; i < 3 && availableJurors.Count > 0; i++)
+                        {
+                            Juror randomJuror = availableJurors[Random.Range(0, availableJurors.Count)];
+                            randomJuror.currProb = Mathf.Min(1f, randomJuror.currProb + 0.5f);
+                            availableJurors.Remove(randomJuror);
+                        }
+                    }
+
 
                 }
             }
         } else
         {
             string suite = judge.GetComponent<Judge>().currentCard.GetComponent<Card>().suite;
+            List<Juror> availableJurors = new List<Juror>(jurors); // all jurors
+
             switch (suite)
             {
-                case "HEAL":
+                case "HEAL": // Case 0
                     unSway();
+                    break;
+
+                case "CHARITY": // Case 1
+                    for (int i = 0; i < 3 && availableJurors.Count > 0; i++)
+                    {
+                        Juror juror = availableJurors[Random.Range(0, availableJurors.Count)];
+                        juror.currProb = Mathf.Max(0, juror.currProb - 0.15f);
+                        availableJurors.Remove(juror);
+                    }
+                    break;
+
+                case "HUMILITY": // Case 2
+                    for (int i = 0; i < 2 && availableJurors.Count > 0; i++)
+                    {
+                        if (Random.value <= 0.5f)
+                        {
+                            Juror juror = availableJurors[Random.Range(0, availableJurors.Count)];
+                            juror.currProb = Mathf.Max(0, juror.currProb - 0.25f);
+                            availableJurors.Remove(juror);
+                        }
+                    }
+                    break;
+
+                case "JUSTICE": // Case 3
+                    for (int i = 0; i < 10 && availableJurors.Count > 0; i++)
+                    {
+                        Juror juror = availableJurors[Random.Range(0, availableJurors.Count)];
+                        juror.currProb = Mathf.Max(0, juror.currProb - 0.05f);
+                        availableJurors.Remove(juror);
+                    }
                     break;
             }
         }

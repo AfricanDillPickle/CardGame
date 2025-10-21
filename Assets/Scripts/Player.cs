@@ -9,6 +9,7 @@ using UnityEngine.Lumin;
 using UnityEngine.XR;
 using System.Linq;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour
 {
@@ -253,6 +254,7 @@ public class Player : MonoBehaviour
                 }
                 judged = false;
                 time = 0;
+
             }
         }
         else if (state == "TRANSITION TO HAND")
